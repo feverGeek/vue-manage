@@ -13,17 +13,75 @@
                 <el-table-column prop="create_time" label="Create Time"></el-table-column>
                 <el-table-column prop="start_time" label="Start Time"></el-table-column>
                 <el-table-column prop="end_time" label="End Time"></el-table-column>
-                <el-table-column prop="status" label="Status"></el-table-column>
+                <el-table-column prop="status" label="Status">
+                    <template #default="scope">
+						<el-tag
+							:type="scope.row.status === '成功' ? 'success' : scope.row.status === '失败' ? 'danger' : ''"
+						>
+							{{ scope.row.status }}
+						</el-tag>
+					</template>
+                </el-table-column>
                 <el-table-column prop="route" label="Route"></el-table-column>
+                <el-table-column label="操作" width="220" align="center">
+					<template #default="scope">
+						<el-button text :icon="Edit" @click="handleEdit(scope.$index, scope.row)" v-permiss="15">
+							编辑
+						</el-button>
+						<el-button text :icon="Delete" class="red" @click="handleDelete(scope.$index)" v-permiss="16">
+							删除
+						</el-button>
+					</template>
+				</el-table-column>
             </el-table>
+            <div class="pagination">
+				<el-pagination
+					background
+					layout="total, prev, pager, next"
+					:current-page="query.pageIndex"
+					:page-size="query.pageSize"
+					:total="pageTotal"
+					@current-change="handlePageChange"
+				></el-pagination>
+			</div>
         </div>
+
+        <!-- editor -->
+        <el-dialog title="edit" v-model="editVisible" width="30%">
+            <el-form label-width="100px">
+				<el-form-item label="task_name">
+					<el-input v-model="form.task_name"></el-input>
+				</el-form-item>
+				<el-form-item label="creator">
+					<el-input v-model="form.creator"></el-input>
+				</el-form-item>
+                <el-form-item label="start_time">
+                    <el-time-picker v-model="form.start_time" arrow-control placeholder="start time"/>
+				</el-form-item>
+                <el-form-item label="end_time">
+					<el-time-picker v-model="form.end_time" arrow-control placeholder="end time"/>
+				</el-form-item>
+                <el-form-item label="status">
+					<el-input v-model="form.status"></el-input>
+				</el-form-item>
+                <el-form-item label="route">
+					<el-input v-model="form.route"></el-input>
+				</el-form-item>
+			</el-form>
+			<template #footer>
+				<span class="dialog-footer">
+					<el-button @click="editVisible = false">取 消</el-button>
+					<el-button type="primary" @click="saveEdit">确 定</el-button>
+				</span>
+			</template>
+        </el-dialog>
     </div>
 </template>
 
 <script setup lang="ts" name="tasks">
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Delete, Edit, Search, Plus } from "@element-plus/icons-vue";
+import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
 import { fetchData } from "../api/tasks";
 
 interface TaskItem {
@@ -106,7 +164,6 @@ const saveEdit = () => {
     ElMessage.success(`修改第 ${idx + 1} 行成功`);
     taskData.value[idx].task_name = form.task_name;
     taskData.value[idx].creator = form.creator;
-    taskData.value[idx].create_time = form.create_time;
     taskData.value[idx].start_time = form.start_time;
     taskData.value[idx].end_time = form.end_time;
     taskData.value[idx].status = form.status;
