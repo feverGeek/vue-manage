@@ -1,0 +1,3 @@
+<template>
+    workers
+</template>
