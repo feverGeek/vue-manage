@@ -20,7 +20,8 @@
                     </div>
                 </template>
             </el-autocomplete>
-            <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+            <el-button type="primary" :icon="Search" @click="handleSearch" class="ml10">搜索</el-button>
+            <el-button type="primary" :icon="Plus">新增</el-button>
         </div>
             <el-table :data="workerData" border class="worker" ref="multipleTable" header-cell-class-name="table-header">
                 <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
@@ -156,6 +157,14 @@ function handleSelect(item: any) {
     margin-bottom: 20px;
 }
 
+.mr10 {
+    margin-right: 10px;
+}
+
+.ml10 {
+    margin-left: 10px;
+}
+
 .autoTaskNameClass {
     li {
         .title {
@@ -176,7 +185,7 @@ function handleSelect(item: any) {
             align-items: center;
             .el-icon{
                 margin-right: 20px;
-            }
+            };
             
         }
     }

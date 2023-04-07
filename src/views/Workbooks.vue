@@ -1,7 +1,24 @@
 <template>
     <div class="container">
         <div class="handle-box">
-            <!-- <el-input v-model="query.task_name" placeholder="task name" class="handle-input mr10"></el-input> -->
+            <el-autocomplete 
+                propper-class="autoTaskNameClass"
+                v-model="query.task_name" 
+                :fetch-suggestions="querySearch" 
+                :trigger-on-focus="false"
+                placeholder="task name" 
+                @select="handleSelect"
+            >
+                <template #default="{ item }">
+                    <div class="autoTaskNameClass_item">
+                        <ElIcon :size="20" color="black">
+                            <Search />
+                        </ElIcon>
+                        <div class="task_name">{{ item.task_name }}</div>
+                    </div>
+                </template>
+            </el-autocomplete>
+
             <el-autocomplete 
                 propper-class="autoTaskNameClass"
                 v-model="query.task_name" 
@@ -180,6 +197,5 @@ function handleSelect(item: any) {
             
         }
     }
-
 }
 </style>

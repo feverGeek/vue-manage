@@ -82,6 +82,14 @@ a {
     margin-bottom: 20px;
 }
 
+.mr10 {
+    margin-right: 10px;
+}
+
+.ml10 {
+    margin-left: 10px;
+}
+
 .move-enter-active,
 .move-leave-active {
     transition: opacity .1s ease;
