@@ -82,7 +82,7 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
-import { fetchData } from "../api/tasks";
+import { fetchTasks } from "../api/tasks";
 
 interface TaskItem {
     id: number;
@@ -105,7 +105,7 @@ const taskData = ref<TaskItem[]>([]);
 const pageTotal = ref(0);
 
 const getData = () => {
-    fetchData().then(res => {
+    fetchTasks().then(res => {
         taskData.value = res.data.list;
         pageTotal.value = res.data.pageTotal || 50;
     });
