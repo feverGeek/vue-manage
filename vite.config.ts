@@ -18,5 +18,5 @@ export default defineConfig({
 	],
 	optimizeDeps: {
 		include: ['schart.js']
-	}
+	},
 });

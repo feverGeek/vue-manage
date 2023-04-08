@@ -6,8 +6,12 @@ import router from './router/tasks';
 import { usePermissStore } from './store/permiss';
 import 'element-plus/dist/index.css';
 import './assets/css/icon.css';
+import axios from 'axios';
 
 const app = createApp(App);
+
+axios.defaults.baseURL = 'http://127.0.0.1:5000'
+app.config.globalProperties.$axios = axios;
 app.use(createPinia());
 app.use(router);
 
