@@ -1,26 +1,27 @@
 <template>
     <div class="container">
         <div class="handle-box">
-            <!-- <el-input v-model="query.task_name" placeholder="task name" class="handle-input mr10"></el-input> -->
             <el-autocomplete 
                 propper-class="autoTaskNameClass"
                 v-model="query.task_name" 
                 :fetch-suggestions="querySearch" 
                 :trigger-on-focus="false"
+                :loading="query.loading"
+                :options="options"
                 placeholder="task name" 
                 @select="handleSelect"
             >
 
-                <template #default="{ item }">
+                <!-- <template #default="{ item }">
                     <div class="autoTaskNameClass_item">
                         <ElIcon :size="20" color="black">
                             <Search />
                         </ElIcon>
                         <div class="task_name">{{ item.task_name }}</div>
                     </div>
-                </template>
+                </template> -->
             </el-autocomplete>
-            <el-button type="primary" :icon="Search" @click="handleSearch" class="ml10">搜索</el-button>
+            <el-button type="primary" :icon="Search" @click="fetchAndPopulateResults" class="ml10">搜索</el-button>
             <el-button type="primary" :icon="Plus">新增</el-button>
         </div>
             <el-table :data="workerData" border class="worker" ref="multipleTable" header-cell-class-name="table-header">
@@ -55,43 +56,37 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
-import { fetchData } from "../api/workers";
+import { queryTaskByName2 } from "../api/workers";
 
-const query = ref({
+const query = reactive({
     task_name: '',
+    loading: false,
     pageIndex: 1,
     pageSize: 10,
 });
-
-
 interface WorkerItem {
     id: number;
     task_name: string;
     worker_name: string;
     task_id: number;
 }
-
 const workerData = ref<WorkerItem[]>([]);
 const pageTotal = ref(0);
-
 const getData = () => {
-    fetchData().then(res => {
-        workerData.value = res.data.list;
-    });
+    // fetchData().then(res => {
+    //     workerData.value = res.data.list;
+    // });
 };
 getData();
-
 // 查询操作
 const handleSearch = () => {
     getData();
 }
-
 // 分页导航
 const handlePageChange = (val: number) => {
-    query.pageIndex = val;
+    // query.pageIndex = val;
     getData();
 };
-
 // 删除操作
 const handleDelete = (index: number) => {
     // 二次确认删除
@@ -128,27 +123,49 @@ const handleEdit = (index: number, row: any) => {
     editVisible.value = true;
 };
 
-function querySearch(input_str: string, callback: any) {
-    var list = [{}];
-    //调用的后台接口
-    let url = '';
-    //从后台获取到对象数组
-    // workers.ts 
-    // axios.get(url).then((response) => {
-    //     //在这里为这个数组中每一个对象加一个value字段, 因为autocomplete只识别value字段并在下拉列中显示
-    //     for (let i of response.data) {
-    //         i.value = i.想要展示的数据; //将想要展示的数据作为value
-    //     }
-    //     list = response.data;
-    //     callback(list);
-    // }).catch((error) => {
-    //     console.log(error);
-    // });
-
+async function querySearch(this: any, queryString: string, cb: (results: any[]) => void) {
+  try {
+    const results = queryTaskByName2(queryString); // replace with your API call
+    cb(results);
+  } catch (error) {
+    console.error(error);
+  }
 }
+
+
+async function fetchAndPopulateResults(this: any) {
+  try {
+    this.loading = true;
+    const results = queryTaskByName2(); // replace with your API call
+    this.options = results;
+    query.loading = false;
+  } catch (error) {
+    console.error(error);
+    this.loading = false;
+  }
+}
+
+
+
+
 
 function handleSelect(item: any) {
     
+}
+</script>
+
+<script lang="ts">
+export default {
+  data() {
+    return {
+      loading: false,
+      options: []
+    };
+  },
+  methods: {
+    querySearch,
+    fetchAndPopulateResults
+  }
 }
 </script>
 
@@ -156,15 +173,12 @@ function handleSelect(item: any) {
 .handle-box {
     margin-bottom: 20px;
 }
-
 .mr10 {
     margin-right: 10px;
 }
-
 .ml10 {
     margin-left: 10px;
 }
-
 .autoTaskNameClass {
     li {
         .title {
@@ -178,7 +192,6 @@ function handleSelect(item: any) {
             color: #b4b4b4;
             margin-bottom: 5px;
         }
-
         .autoTaskNameClass_item {
             overflow: hidden;
             display: flex;
@@ -189,6 +202,5 @@ function handleSelect(item: any) {
             
         }
     }
-
 }
 </style>
