@@ -9,3 +9,23 @@ export const queryTaskByName2 = (p_task_name: string = '') => {
         }
     });
 };
+
+export const queryWokers = (p_task_id: number) => {
+    return request({
+        url: '/api/workers/query',
+        method: 'get',
+        params: {
+            task_id: p_task_id,
+        }
+    });
+};
+
+export const addWorker = (p_task_id: number) => {
+    return request({
+        url: '/api/workers/query',
+        method: 'get',
+        params: {
+            task_id: p_task_id,
+        }
+    });
+};
