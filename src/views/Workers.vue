@@ -20,10 +20,11 @@
         <el-table :data="workerData" border class="worker" ref="multipleTable" header-cell-class-name="table-header">
             <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
             <el-table-column prop="worker_name" label="Worker Name"></el-table-column>
+            <el-table-column prop="task_id" label="Task ID"></el-table-column>
             <el-table-column prop="task_name" label="Task Name"></el-table-column>
             <el-table-column label="操作" width="220" align="center">
                 <template #default="scope">
-                    <el-button text :icon="Edit" @click="handleEdit(scope.$index, scope.row)" v-permiss="15">
+                    <el-button text :icon="Edit" @click="handleEdit(scope.$index, scope.row.id, scope.row)" v-permiss="15">
                         编辑
                     </el-button>
                     <el-button text :icon="Delete" class="red" @click="handleDelete(scope.$index)" v-permiss="16">
@@ -47,9 +48,9 @@
         <el-dialog title="新增" v-model="addVisible" width="30%">
             <el-form label-width="100px">
                 <el-form-item label="task_id">
-                    <el-autocomplete propper-class="autoTaskNameClass" v-model="query.add_form_input" :fetch-suggestions="querySearch" :trigger-on-focus="false" :clearable="true" placeholder="task name" @select="handleAddFormSelect">
+                    <el-autocomplete propper-class="autoWorkerClass" v-model="query.add_form_input" :fetch-suggestions="querySearch" :trigger-on-focus="false" :clearable="true" placeholder="task name" @select="handleAddFormSelect">
                         <template #default="{ item }">
-                            <div class="autoTaskNameClass_item">
+                            <div class="autoWorkerClass_item">
                                 <ElIcon :size="15" color="black">
                                     <Search />
                                 </ElIcon>
@@ -73,27 +74,13 @@
         </el-dialog>
 
         <!-- edit -->
-        <!-- <el-dialog title="编辑" v-model="editVisible" width="30%">
+        <el-dialog title="编辑" v-model="editVisible" width="30%">
             <el-form label-width="100px">
-                <el-form-item label="task_name">
-                    <el-input v-model="editForm.task_name"></el-input>
+                <el-form-item label="worker_name">
+                    <el-input v-model="editForm.worker_name"></el-input>
                 </el-form-item>
-                <el-form-item label="creator">
-                    <el-input v-model="editForm.creator"></el-input>
-                </el-form-item>
-                <el-form-item label="start_time" width="100%">
-                    <el-date-picker type="datetime" v-model="editForm.start_time" format="YYYY-MM-DD HH:mm:ss"
-                        placeholder="start time" />
-                </el-form-item>
-                <el-form-item label="end_time">
-                    <el-date-picker type="datetime" v-model="editForm.end_time" format="YYYY-MM-DD HH:mm:ss"
-                        placeholder="end time" />
-                </el-form-item>
-                <el-form-item label="status">
-                    <el-input v-model="editForm.status"></el-input>
-                </el-form-item>
-                <el-form-item label="access_code">
-                    <el-input v-model="editForm.access_code"></el-input>
+                <el-form-item label="task_id">
+                    <el-input v-model="editForm.task_id"></el-input>
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -102,7 +89,7 @@
                     <el-button type="primary" @click="saveEdit">确 定</el-button>
                 </span>
             </template>
-        </el-dialog> -->
+        </el-dialog>
     </div>
 </template>
 
@@ -110,7 +97,7 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
-import { queryTaskByName2,queryWokers } from "../api/workers";
+import { queryTaskByName2, queryWokers, addWorker, modifyWorker } from "../api/workers";
 import { AxiosPromise } from 'axios';
 
 const query = reactive({
@@ -158,28 +145,43 @@ const handleDelete = (index: number) => {
 };
 // 表格编辑时弹窗和保存
 const editVisible = ref(false);
-let form = reactive({
-    task_name: '',
-    creator: '',
-    create_time: '',
-    start_time: '',
-    end_time: '',
-    status: '',
-    route: '',
+let editForm = reactive({
+    task_id: '',
+    worker_name: '',
 });
 let idx: number = -1;
-const handleEdit = (index: number, row: any) => {
+let worker_id: number = 0;
+const handleEdit = (index: number, p_worker_id: number, row: any) => {
     idx = index;
-    form.task_name = row.task_name;
-    form.creator = row.creator;
-    form.create_time = row.create_time;
-    form.start_time = row.start_time;
-    form.end_time = row.end_time;
-    form.status = row.status;
-    form.route = row.status;
+    worker_id = p_worker_id;
+    editForm.task_id = row.task_id;
+    editForm.worker_name = row.worker_name;
     editVisible.value = true;
 };
 
+async function saveEdit() {
+    editVisible.value = false;
+    
+    try {
+        let workerItem = {
+            worker_id: worker_id,
+            worker_name: editForm.worker_name,
+            task_id: editForm.task_id,
+        };
+        const results = await modifyWorker(workerItem);
+        if (results.data.data.code === 200) {
+            workerData.value[idx].task_id = editForm.task_id;
+            workerData.value[idx].task_name = query.task_name;
+        }
+    } catch(error) {
+        console.log(error);
+    }
+    
+
+
+}
+
+// 查询
 async function querySearch(this: any, queryString: string, cb: (results: AxiosPromise<any>) => void) {
   try {
     const results = await queryTaskByName2(queryString); // replace with your API call
@@ -213,12 +215,14 @@ async function fetchAndPopulateResults(this: any) {
 async function handleSelect(item: any) {
     try {
         console.log(item);
-        console.log(typeof(item));
-        console.log(item.id);
 
         const results = await queryWokers(item.id);
-        console.log(results);
-        workerData.value = results.data.data.wokers;
+        for(let i=0; i < results.data.data.workers.length; i++)
+        {
+            results.data.data.workers[i].task_name = item.task_name;
+        }
+        console.log(results.data.data.workers);
+        workerData.value = results.data.data.workers;
         pageTotal.value = results.data.data.total;
     } catch (error) {
         console.log(error);
@@ -251,10 +255,10 @@ const saveAdd = () => {
 
     let workerItem = {
         worker_name: addForm.worker_name,
-        task_id: addForm.task_id,
+        task_id: query.add_form_input,
     };
-
-    addWorker(taskItem).then(res => {
+    console.log(workerItem);
+    addWorker(workerItem).then(res => {
         if (res.data.code == 200) {
             ElMessage.success(res.data.data.info);
         }

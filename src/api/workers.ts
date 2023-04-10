@@ -20,12 +20,25 @@ export const queryWokers = (p_task_id: number) => {
     });
 };
 
-export const addWorker = (p_task_id: number) => {
+export const addWorker = (workerItem: any) => {
     return request({
-        url: '/api/workers/query',
-        method: 'get',
-        params: {
-            task_id: p_task_id,
+        url: '/api/workers/add',
+        method: 'post',
+        data: {
+            task_id: workerItem.task_id,
+            worker_name: workerItem.worker_name,
         }
     });
 };
+
+export const modifyWorker = (workerItem: any) => {
+    return request({
+        url: '/api/workers/modify',
+        method: 'post',
+        data: {
+            worker_id: workerItem.worker_id,
+            worker_name: workerItem.worker_name,
+            task_id: workerItem.task_id
+        }
+    });
+}
