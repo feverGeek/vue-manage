@@ -71,7 +71,7 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
-import { fetchData } from "../api/workers";
+import { queryTaskByName2 } from "../api/workers";
 
 const query = ref({
     task_name: '',

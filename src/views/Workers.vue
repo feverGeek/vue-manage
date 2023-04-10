@@ -6,49 +6,47 @@
                 v-model="query.task_name" 
                 :fetch-suggestions="querySearch" 
                 :trigger-on-focus="false"
-                :loading="query.loading"
-                :options="options"
+                :clearable="true"
                 placeholder="task name" 
                 @select="handleSelect"
             >
 
-                <!-- <template #default="{ item }">
+                <template #default="{ item }">
                     <div class="autoTaskNameClass_item">
                         <ElIcon :size="20" color="black">
                             <Search />
                         </ElIcon>
-                        <div class="task_name">{{ item.task_name }}</div>
+                        <div >id:{{ item.id }} name:{{ item.task_name }} </div>
                     </div>
-                </template> -->
+                </template> 
             </el-autocomplete>
-            <el-button type="primary" :icon="Search" @click="fetchAndPopulateResults" class="ml10">搜索</el-button>
-            <el-button type="primary" :icon="Plus">新增</el-button>
+            <el-button type="primary" :icon="Plus" class="ml10">新增</el-button>
         </div>
-            <el-table :data="workerData" border class="worker" ref="multipleTable" header-cell-class-name="table-header">
-                <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
-                <el-table-column prop="worker_name" label="Worker Name"></el-table-column>
-                <el-table-column prop="task_name" label="Task Name"></el-table-column>
-                <el-table-column label="操作" width="220" align="center">
-					<template #default="scope">
-						<el-button text :icon="Edit" @click="handleEdit(scope.$index, scope.row)" v-permiss="15">
-							编辑
-						</el-button>
-						<el-button text :icon="Delete" class="red" @click="handleDelete(scope.$index)" v-permiss="16">
-							删除
-						</el-button>
-					</template>
-				</el-table-column>
-            </el-table>
-            <div class="pagination">
-				<el-pagination
-					background
-					layout="total, prev, pager, next"
-					:current-page="query.pageIndex"
-					:page-size="query.pageSize"
-					:total="pageTotal"
-					@current-change="handlePageChange"
-				></el-pagination>
-			</div>
+        <el-table :data="workerData" border class="worker" ref="multipleTable" header-cell-class-name="table-header">
+            <el-table-column prop="id" label="ID" width="55" align="center"></el-table-column>
+            <el-table-column prop="worker_name" label="Worker Name"></el-table-column>
+            <el-table-column prop="task_name" label="Task Name"></el-table-column>
+            <el-table-column label="操作" width="220" align="center">
+                <template #default="scope">
+                    <el-button text :icon="Edit" @click="handleEdit(scope.$index, scope.row)" v-permiss="15">
+                        编辑
+                    </el-button>
+                    <el-button text :icon="Delete" class="red" @click="handleDelete(scope.$index)" v-permiss="16">
+                        删除
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div class="pagination">
+            <el-pagination
+                background
+                layout="total, prev, pager, next"
+                :current-page="query.pageIndex"
+                :page-size="query.pageSize"
+                :total="pageTotal"
+                @current-change="handlePageChange"
+            ></el-pagination>
+        </div>
     </div>
 </template>
 
@@ -57,12 +55,14 @@ import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
 import { queryTaskByName2 } from "../api/workers";
+import { AxiosPromise } from 'axios';
 
 const query = reactive({
     task_name: '',
     loading: false,
     pageIndex: 1,
     pageSize: 10,
+    options: null,
 });
 interface WorkerItem {
     id: number;
@@ -123,10 +123,17 @@ const handleEdit = (index: number, row: any) => {
     editVisible.value = true;
 };
 
-async function querySearch(this: any, queryString: string, cb: (results: any[]) => void) {
+async function querySearch(this: any, queryString: string, cb: (results: AxiosPromise<any>) => void) {
   try {
-    const results = queryTaskByName2(queryString); // replace with your API call
-    cb(results);
+    const results = await queryTaskByName2(queryString); // replace with your API call
+    let data = results.data;
+    if(data.data.info === '暂无数据'){
+        data = [{'task_name': '暂无数据'}];
+        cb(data);
+    } else {
+        cb(data.data.tasks);
+    }
+    
   } catch (error) {
     console.error(error);
   }
@@ -135,13 +142,14 @@ async function querySearch(this: any, queryString: string, cb: (results: any[]) 
 
 async function fetchAndPopulateResults(this: any) {
   try {
-    this.loading = true;
-    const results = queryTaskByName2(); // replace with your API call
-    this.options = results;
+    query.loading = true;
+    const results = queryTaskByName2(query.task_name); // replace with your API call
+    const data = (await results).data.data.tasks;
+    query.options = data;
     query.loading = false;
   } catch (error) {
     console.error(error);
-    this.loading = false;
+    query.loading = false;
   }
 }
 
@@ -150,23 +158,11 @@ async function fetchAndPopulateResults(this: any) {
 
 
 function handleSelect(item: any) {
-    
+    console.log(item);
 }
 </script>
 
 <script lang="ts">
-export default {
-  data() {
-    return {
-      loading: false,
-      options: []
-    };
-  },
-  methods: {
-    querySearch,
-    fetchAndPopulateResults
-  }
-}
 </script>
 
 <style scoped lang="scss">
