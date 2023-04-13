@@ -10,7 +10,7 @@ export const queryTaskByName2 = (p_task_name: string = '') => {
     });
 };
 
-export const queryWokers = (p_task_id: number) => {
+export const queryWorkers = (p_task_id: number) => {
     return request({
         url: '/api/workers/query',
         method: 'get',
@@ -39,6 +39,16 @@ export const modifyWorker = (workerItem: any) => {
             worker_id: workerItem.worker_id,
             worker_name: workerItem.worker_name,
             task_id: workerItem.task_id
+        }
+    });
+}
+
+export const delWorker = (id: number) => {
+    return request({
+        url: '/api/workers/del',
+        method: 'post',
+        data: {
+            worker_id: id
         }
     });
 }

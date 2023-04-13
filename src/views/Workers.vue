@@ -97,7 +97,7 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit, Search, Plus, Calendar } from "@element-plus/icons-vue";
-import { queryTaskByName2, queryWokers, addWorker, modifyWorker } from "../api/workers";
+import { queryTaskByName2, queryWorkers, addWorker, modifyWorker, delWorker } from "../api/workers";
 import { AxiosPromise } from 'axios';
 
 const query = reactive({
@@ -136,17 +136,33 @@ const handleDelete = (index: number) => {
     // 二次确认删除
     ElMessageBox.confirm('确定要删除吗？', '提示', {
         type: 'warning'
-    })
-        .then(() => {
-            ElMessage.success('删除成功');
-            workerData.value.splice(index, 1);
-        })
-        .catch(() => { });
+    }).then(() => {
+        worker_id = workerData.value[index].id;
+        delWorker(worker_id).then(res => {
+            console.log(res);
+            if (res.data.code == 200) {
+                console.log(editForm.task_id);
+                ElMessage.success('删除成功');
+                queryWorkers(editForm.task_id).then(res => {
+                    workerData.value = res.data.data.workers;
+                    pageTotal.value = res.data.data.total;
+                });
+                console.log(workerData.value);
+                console.log(pageTotal.value);
+                
+                // workerData.value.splice(index, 1);
+            } else {
+                ElMessage.error(res.data.data.error);
+            }
+
+        });
+            
+    }).catch((e) => { console.log(e) });
 };
 // 表格编辑时弹窗和保存
 const editVisible = ref(false);
 let editForm = reactive({
-    task_id: '',
+    task_id: 0,
     worker_name: '',
 });
 let idx: number = -1;
@@ -171,14 +187,14 @@ async function saveEdit() {
         const results = await modifyWorker(workerItem);
         if (results.data.data.code === 200) {
             workerData.value[idx].task_id = editForm.task_id;
-            workerData.value[idx].task_name = query.task_name;
+            workerData.value[idx].task_name =  query.task_name;
+        } else {
+            ElMessage.error(results.data.data.error);
         }
     } catch(error) {
         console.log(error);
     }
     
-
-
 }
 
 // 查询
@@ -216,7 +232,7 @@ async function handleSelect(item: any) {
     try {
         console.log(item);
 
-        const results = await queryWokers(item.id);
+        const results = await queryWorkers(item.id);
         for(let i=0; i < results.data.data.workers.length; i++)
         {
             results.data.data.workers[i].task_name = item.task_name;
@@ -237,7 +253,12 @@ let addForm = reactive({
     task_id: 0,
 });
 const handleAdd = () => {
+    // if(Object.keys(workerData.value).length !== 0)
+    // {
+    //     addVisible.value = true;
+    // }
     addVisible.value = true;
+        
 };
 async function handleAddFormSelect(item: any) {
     try {
@@ -256,11 +277,21 @@ const saveAdd = () => {
     let workerItem = {
         worker_name: addForm.worker_name,
         task_id: query.add_form_input,
+        task_name: query.task_name,
     };
     console.log(workerItem);
     addWorker(workerItem).then(res => {
         if (res.data.code == 200) {
-            ElMessage.success(res.data.data.info);
+            queryWorkers(workerItem.task_id).then(res => {
+                for(let i=0; i < res.data.data.workers.length; i++)
+                {
+                    res.data.data.workers[i].task_name = workerItem.task_name;
+                }
+                console.log(res.data.data.workers);
+                workerData.value = res.data.data.workers;
+                pageTotal.value = res.data.data.total;
+            });
+            ElMessage.success(res.data.data.info); 
         }
         else {
             ElMessage.error(res.data.data.error);
